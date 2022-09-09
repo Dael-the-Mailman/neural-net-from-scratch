@@ -23,21 +23,24 @@ def sigmoidPrime(Z):
     return np.exp(-Z)/((1+np.exp(-Z)**2))
 
 
-lr = 1e-3
+lr = 1e-3 # The learning rate of the system is 0.001
+LAYER_SIZE = 16 # The size of the neural network layers
+OUTPUT_SIZE = 10 # There are 10 numbers to predict [0-9]
+INPUT_SIZE = 28*28 # The images are 28 by 28 pixels which means there are 784 data points per image
 if __name__ == '__main__':
     # Load data
     (train_X, train_y), (test_X, test_y) = mnist.load_data()
 
     # Kaiming Initialization
-    W1 = np.random.randn(16, 28*28) * np.sqrt(2/(28*28))
-    b1 = np.zeros((16, 1))
+    W1 = np.random.randn(LAYER_SIZE, INPUT_SIZE) * np.sqrt(2/INPUT_SIZE)
+    b1 = np.zeros((LAYER_SIZE, 1))
 
-    W2 = np.random.randn(16, 16) * np.sqrt(2/16)
-    b2 = np.zeros((16, 1))
+    W2 = np.random.randn(LAYER_SIZE, LAYER_SIZE) * np.sqrt(2/LAYER_SIZE)
+    b2 = np.zeros((LAYER_SIZE, 1))
 
     # Xavier Initialization
-    W3 = np.random.randn(10, 16) * np.sqrt(1/16)
-    b3 = np.zeros((10, 1))
+    W3 = np.random.randn(OUTPUT_SIZE, LAYER_SIZE) * np.sqrt(1/LAYER_SIZE)
+    b3 = np.zeros((OUTPUT_SIZE, 1))
 
     true = 0
     for idx in tqdm(range(len(test_y))):
@@ -59,7 +62,8 @@ if __name__ == '__main__':
             true += 1
     print(f"Accuracy: {100*true/len(test_y)}%")
 
-    for epoch in tqdm(range(100)):
+    # Training
+    for epoch in tqdm(range(1)):
         for idx in range(len(train_y)):
             X = train_X[idx].reshape((-1, 1))/255
             y = train_y[idx]
@@ -79,22 +83,22 @@ if __name__ == '__main__':
             # Change in cost given a3
             dC_dA3 = 2*(a3-one_hot)
 
-            # Jacobian dZ3_dW3 - Change in z3 given W3 is a2
-            dZ3_dW3 = np.tile(a2, (1, 10)).T
+            # Jacobian dZ3_dW3 -> Change in z3 given W3 is a2
+            dZ3_dW3 = np.tile(a2, (1, OUTPUT_SIZE)).T # We tile a2 to match the shape of z3
             dC_dW3 = dC_dA3*sigmoidPrime(z3)*dZ3_dW3
             dC_dB3 = dC_dA3*sigmoidPrime(z3)
 
-            # Jacobian dZ2_dW2 - Change in z2 given W2 is a1
-            dZ2_dW2 = np.tile(a1, (1, 16)).T
+            # Jacobian dZ2_dW2 -> Change in z2 given W2 is a1
+            dZ2_dW2 = np.tile(a1, (1, LAYER_SIZE)).T # We tile a1 to match the shape of z2
             dC_dW2 = np.dot(W3.T, dC_dB3)*ReLUPrime(z2)*dZ2_dW2
             dC_dB2 = np.dot(W3.T, dC_dB3)*ReLUPrime(z2)
 
-            # Jacobian dZ1_dW1 - Change in z1 given W1 is X
-            dZ1_dW1 = np.tile(X, (1, 16)).T
+            # Jacobian dZ1_dW1 -> Change in z1 given W1 is X
+            dZ1_dW1 = np.tile(X, (1, LAYER_SIZE)).T # We tile X to match the shape of z1
             dC_dW1 = np.dot(W2.T, dC_dB2)*ReLUPrime(z1)*dZ1_dW1
             dC_dB1 = np.dot(W2.T, dC_dB2)*ReLUPrime(z1)
 
-            # Update
+            # Update Steps
             # Layer 3/Output layer update
             W3 = W3 - lr*dC_dW3
             b3 = b3 - lr*dC_dB3
