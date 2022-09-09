@@ -6,7 +6,7 @@ The purpose of this project was to get a more complete understanding of the inne
 ## Files
 * load_data.py - Test to see how the data should be loaded
 * MNIST_NN.py - Tried using torch to see if GPU ran faster. In the end numpy was faster
-* numpy_MNIST.py - The numpy version of the model
+* numpy_MNIST.py - The numpy version of the model and the most comprehensive version
 * reference.py - The proof of concept for my project
 
 ## Results
